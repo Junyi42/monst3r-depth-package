@@ -50,6 +50,33 @@ def generate_monocular_depth_maps(img_list, depth_prior_name='depthpro'):
         #   depth = pipe(image)["predicted_depth"].numpy()
         #   np.savez_compressed(path_depthanything, depth=depth)
 
+
+def generate_monocular_depth_maps_without_saving(img_list, depth_prior_name='depthpro'):
+
+    depth_maps = []
+    if depth_prior_name=='depthpro':
+        model, transform = depth_pro.create_model_and_transforms(device='cuda')
+        model.eval()
+        for image_path in tqdm(img_list):
+          path_depthpro = image_path.replace('.png','_pred_depth_depthpro.npz').replace('.jpg','_pred_depth_depthpro.npz')
+          image, _, f_px = depth_pro.load_rgb(image_path)
+          image = transform(image)
+          # Run inference.
+          prediction = model.infer(image, f_px=f_px)
+          depth = prediction["depth"].cpu()  # Depth in [m].
+        #   np.savez_compressed(path_depthpro, depth=depth, focallength_px=prediction["focallength_px"].cpu())  
+          depth_maps.append({'depth': depth.numpy(), 'focallength_px': prediction["focallength_px"].cpu().numpy()})
+    elif depth_prior_name=='depthanything':
+        raise NotImplementedError("DepthAnything is not supported yet.")
+        # pipe = pipeline(task="depth-estimation", model="depth-anything/Depth-Anything-V2-Large-hf",device='cuda')
+        # for image_path in tqdm(img_list):
+        #   path_depthanything = image_path.replace('.png','_pred_depth_depthanything.npz').replace('.jpg','_pred_depth_depthanything.npz')
+        #   image = Image.open(image_path)
+        #   depth = pipe(image)["predicted_depth"].numpy()
+        #   np.savez_compressed(path_depthanything, depth=depth)
+
+    return depth_maps
+
 def depth_read(filename):
     """ Read depth data from file, return as numpy array. """
     f = open(filename,'rb')
@@ -284,8 +311,13 @@ def load_images(folder_or_list, size, square_ok=False, verbose=True, dynamic_mas
 
     else:
         raise ValueError(f'Bad input {folder_or_list=} ({type(folder_or_list)})')
+<<<<<<< HEAD
+
+    depth_maps = generate_monocular_depth_maps_without_saving(folder_or_list, depth_prior_name=depth_prior_name)
+=======
     # TODO: if already have depth maps, skip this step
     generate_monocular_depth_maps(folder_or_list, depth_prior_name=depth_prior_name)
+>>>>>>> b4a06bed47dd766969d74fd2c5ceb7b858652a7e
 
     supported_images_extensions = ['.jpg', '.jpeg', '.png']
     supported_video_extensions = ['.mp4', '.avi', '.mov']
@@ -299,22 +331,28 @@ def load_images(folder_or_list, size, square_ok=False, verbose=True, dynamic_mas
     #start = 0
     folder_content = sorted(folder_content, key=lambda x: x.split('/')[-1])[start : start + interval]
     # print(start,interval,len(folder_content))
+<<<<<<< HEAD
+    for path, pred_depth in zip(folder_content, depth_maps):
+=======
     for i, path in enumerate(folder_content):
+>>>>>>> b4a06bed47dd766969d74fd2c5ceb7b858652a7e
         full_path = os.path.join(root, path)
         if path.lower().endswith(supported_images_extensions):
             # Process image files
             img = exif_transpose(PIL.Image.open(full_path)).convert('RGB')
 
-            if traj_format == 'sintel':
-              pred_depth = np.load(full_path.replace('final','depth_prediction_' + depth_prior_name).replace('.png', '.npz'))
-            elif traj_format in ["tum", "tartanair"]:
-              pred_depth = np.load(full_path.replace('rgb_50','rgb_50_depth_prediction_' + depth_prior_name).replace('.png', '.npz'))
-            elif traj_format in ["bonn"]:
-                pred_depth = np.load(full_path.replace('rgb_110','rgb_110_depth_prediction_' + depth_prior_name).replace('.png', '.npz'))
-            elif traj_format in ["davis"]:
-                pred_depth = np.load(full_path.replace('JPEGImages','depth_prediction_' + depth_prior_name).replace('.jpg', '.npz').replace('480p', '1080p'))
-            else:
-                pred_depth = np.load(full_path.replace('.png','_pred_depth_' + depth_prior_name + '.npz').replace('.jpg','_pred_depth_' + depth_prior_name + '.npz'), allow_pickle=True)
+            # if traj_format == 'sintel':
+            #   pred_depth = np.load(full_path.replace('final','depth_prediction_' + depth_prior_name).replace('.png', '.npz'))
+            # elif traj_format in ["tum", "tartanair"]:
+            #   pred_depth = np.load(full_path.replace('rgb_50','rgb_50_depth_prediction_' + depth_prior_name).replace('.png', '.npz'))
+            # elif traj_format in ["bonn"]:
+            #     pred_depth = np.load(full_path.replace('rgb_110','rgb_110_depth_prediction_' + depth_prior_name).replace('.png', '.npz'))
+            # elif traj_format in ["davis"]:
+            #     pred_depth = np.load(full_path.replace('JPEGImages','depth_prediction_' + depth_prior_name).replace('.jpg', '.npz').replace('480p', '1080p'))
+            # else:
+            #     pred_depth = np.load(full_path.replace('.png','_pred_depth_' + depth_prior_name + '.npz').replace('.jpg','_pred_depth_' + depth_prior_name + '.npz'), allow_pickle=True)
+
+
             #print(pred_depth)
             if depth_prior_name == 'depthpro':
               focal_length_px = pred_depth['focallength_px']
