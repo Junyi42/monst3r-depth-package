@@ -25,10 +25,6 @@ setup(
         "seaborn",
         "sam2 @ file://localhost/" + os.path.abspath("third_party/sam2"),
         "depth_pro @ file://localhost/" + os.path.abspath("third_party/ml-depth-pro"),
+        'croco @ git+https://github.com/Junyi42/croco_package.git',
     ],
-    extras_require={
-        'all': [
-            'croco @ git+https://github.com/Junyi42/croco_package.git'
-        ],
-    },
 )

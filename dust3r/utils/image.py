@@ -311,8 +311,13 @@ def load_images(folder_or_list, size, square_ok=False, verbose=True, dynamic_mas
 
     else:
         raise ValueError(f'Bad input {folder_or_list=} ({type(folder_or_list)})')
+<<<<<<< HEAD
 
     depth_maps = generate_monocular_depth_maps_without_saving(folder_or_list, depth_prior_name=depth_prior_name)
+=======
+    # TODO: if already have depth maps, skip this step
+    generate_monocular_depth_maps(folder_or_list, depth_prior_name=depth_prior_name)
+>>>>>>> b4a06bed47dd766969d74fd2c5ceb7b858652a7e
 
     supported_images_extensions = ['.jpg', '.jpeg', '.png']
     supported_video_extensions = ['.mp4', '.avi', '.mov']
@@ -326,7 +331,11 @@ def load_images(folder_or_list, size, square_ok=False, verbose=True, dynamic_mas
     #start = 0
     folder_content = sorted(folder_content, key=lambda x: x.split('/')[-1])[start : start + interval]
     # print(start,interval,len(folder_content))
+<<<<<<< HEAD
     for path, pred_depth in zip(folder_content, depth_maps):
+=======
+    for i, path in enumerate(folder_content):
+>>>>>>> b4a06bed47dd766969d74fd2c5ceb7b858652a7e
         full_path = os.path.join(root, path)
         if path.lower().endswith(supported_images_extensions):
             # Process image files
@@ -372,12 +381,20 @@ def load_images(folder_or_list, size, square_ok=False, verbose=True, dynamic_mas
             )
             
             if dynamic_mask_root is not None:
-                dynamic_mask_path = os.path.join(dynamic_mask_root, os.path.basename(path))
+                # if dynamic_mask_root is a list
+                if isinstance(dynamic_mask_root, list):
+                    dynamic_mask_path = dynamic_mask_root[i]
+                else:
+                    dynamic_mask_path = os.path.join(dynamic_mask_root, os.path.basename(path))
             else:  # Sintel dataset handling
                 dynamic_mask_path = full_path.replace('final', 'dynamic_label_perfect').replace('clean', 'dynamic_label_perfect').replace('MPI-Sintel-training_images','MPI-Sintel-depth-training')
             #print(dynamic_mask_path)
             if os.path.exists(dynamic_mask_path):
-                dynamic_mask = PIL.Image.open(dynamic_mask_path).convert('L')
+                if dynamic_mask_path.endswith('.npy'):
+                    dynamic_mask = np.load(dynamic_mask_path)
+                    dynamic_mask = PIL.Image.fromarray(((dynamic_mask > 0) * 255).astype(np.uint8))
+                else:
+                    dynamic_mask = PIL.Image.open(dynamic_mask_path).convert('L')
                 dynamic_mask, _ = crop_img(dynamic_mask, size, square_ok=square_ok)
                 #print(dynamic_mask)
                 dynamic_mask = ToTensor(dynamic_mask)[None].sum(1) > 0.99  # "1" means dynamic
