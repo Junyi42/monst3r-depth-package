@@ -15,8 +15,10 @@ import cv2  # noqa
 import glob
 import imageio
 import matplotlib.pyplot as plt
-import depth_pro
 from tqdm import tqdm
+
+import depth_pro
+from third_party.MoGe.moge.model import MoGeModel
 
 try:
     from pillow_heif import register_heif_opener  # noqa
@@ -29,43 +31,22 @@ ImgNorm = tvf.Compose([tvf.ToTensor(), tvf.Normalize((0.5, 0.5, 0.5), (0.5, 0.5,
 ToTensor = tvf.ToTensor()
 TAG_FLOAT = 202021.25
 
-def generate_monocular_depth_maps(img_list, depth_prior_name='depthpro'):
-    if depth_prior_name=='depthpro':
-        model, transform = depth_pro.create_model_and_transforms(device='cuda')
-        model.eval()
-        for image_path in tqdm(img_list):
-          path_depthpro = image_path.replace('.png','_pred_depth_depthpro.npz').replace('.jpg','_pred_depth_depthpro.npz')
-          image, _, f_px = depth_pro.load_rgb(image_path)
-          image = transform(image)
-          # Run inference.
-          prediction = model.infer(image, f_px=f_px)
-          depth = prediction["depth"].cpu()  # Depth in [m].
-          np.savez_compressed(path_depthpro, depth=depth, focallength_px=prediction["focallength_px"].cpu())  
-    elif depth_prior_name=='depthanything':
-        raise NotImplementedError("DepthAnything is not supported yet.")
-        # pipe = pipeline(task="depth-estimation", model="depth-anything/Depth-Anything-V2-Large-hf",device='cuda')
-        # for image_path in tqdm(img_list):
-        #   path_depthanything = image_path.replace('.png','_pred_depth_depthanything.npz').replace('.jpg','_pred_depth_depthanything.npz')
-        #   image = Image.open(image_path)
-        #   depth = pipe(image)["predicted_depth"].numpy()
-        #   np.savez_compressed(path_depthanything, depth=depth)
-
-
-def generate_monocular_depth_maps_without_saving(img_list, depth_prior_name='depthpro'):
-
+def generate_monocular_depth_maps(img_list, depth_prior_name='depthpro', save_depth=True):
     depth_maps = []
+
     if depth_prior_name=='depthpro':
         model, transform = depth_pro.create_model_and_transforms(device='cuda')
         model.eval()
         for image_path in tqdm(img_list):
-          path_depthpro = image_path.replace('.png','_pred_depth_depthpro.npz').replace('.jpg','_pred_depth_depthpro.npz')
-          image, _, f_px = depth_pro.load_rgb(image_path)
-          image = transform(image)
-          # Run inference.
-          prediction = model.infer(image, f_px=f_px)
-          depth = prediction["depth"].cpu()  # Depth in [m].
-        #   np.savez_compressed(path_depthpro, depth=depth, focallength_px=prediction["focallength_px"].cpu())  
-          depth_maps.append({'depth': depth.numpy(), 'focallength_px': prediction["focallength_px"].cpu().numpy()})
+            path_depthpro = image_path.replace('.png','_pred_depth_depthpro.npz').replace('.jpg','_pred_depth_depthpro.npz')
+            image, _, f_px = depth_pro.load_rgb(image_path)
+            image = transform(image)
+            # Run inference.
+            prediction = model.infer(image, f_px=f_px)
+            depth = prediction["depth"].cpu()  # Depth in [m].
+            depth_maps.append({'depth': depth.numpy(), 'focallength_px': prediction["focallength_px"].cpu().numpy()})
+            if save_depth:
+                np.savez_compressed(path_depthpro, depth=depth, focallength_px=prediction["focallength_px"].cpu())
     elif depth_prior_name=='depthanything':
         raise NotImplementedError("DepthAnything is not supported yet.")
         # pipe = pipeline(task="depth-estimation", model="depth-anything/Depth-Anything-V2-Large-hf",device='cuda')
@@ -73,7 +54,30 @@ def generate_monocular_depth_maps_without_saving(img_list, depth_prior_name='dep
         #   path_depthanything = image_path.replace('.png','_pred_depth_depthanything.npz').replace('.jpg','_pred_depth_depthanything.npz')
         #   image = Image.open(image_path)
         #   depth = pipe(image)["predicted_depth"].numpy()
-        #   np.savez_compressed(path_depthanything, depth=depth)
+        # if save:
+        #     np.savez_compressed(path_depthanything, depth=depth)
+    elif depth_prior_name == 'moge':
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model = MoGeModel.from_pretrained("Ruicheng/moge-vitl").to(device)                             
+
+        for image_path in tqdm(img_list):
+            path_moge = image_path.replace('.png','_pred_depth_moge.npz').replace('.jpg','_pred_depth_moge.npz')
+
+            # Read the input image and convert to tensor (3, H, W) and normalize to [0, 1]
+            input_image = cv2.cvtColor(cv2.imread(image_path), cv2.COLOR_BGR2RGB)
+            input_image = torch.tensor(input_image / 255, dtype=torch.float32, device=device).permute(2, 0, 1)
+
+            # Infer 
+            output = model.infer(input_image)
+            depth = output["depth"].cpu().numpy()
+            mask = output["mask"].cpu().numpy()
+            intrinsics = output["intrinsics"].cpu().numpy() # (3, 3)
+            focal_length_x, focal_length_y = intrinsics[0, 0], intrinsics[1, 1]
+
+            depth_maps.append({'depth': depth, 'intrinsics': intrinsics, 'mask': mask})
+
+            if save_depth:
+                np.savez_compressed(path_moge, depth=depth, intrinsics=intrinsics, mask=mask,)
 
     return depth_maps
 
@@ -311,13 +315,9 @@ def load_images(folder_or_list, size, square_ok=False, verbose=True, dynamic_mas
 
     else:
         raise ValueError(f'Bad input {folder_or_list=} ({type(folder_or_list)})')
-<<<<<<< HEAD
 
-    depth_maps = generate_monocular_depth_maps_without_saving(folder_or_list, depth_prior_name=depth_prior_name)
-=======
     # TODO: if already have depth maps, skip this step
-    generate_monocular_depth_maps(folder_or_list, depth_prior_name=depth_prior_name)
->>>>>>> b4a06bed47dd766969d74fd2c5ceb7b858652a7e
+    depth_maps = generate_monocular_depth_maps(folder_or_list, depth_prior_name=depth_prior_name, save_depth=False)
 
     supported_images_extensions = ['.jpg', '.jpeg', '.png']
     supported_video_extensions = ['.mp4', '.avi', '.mov']
