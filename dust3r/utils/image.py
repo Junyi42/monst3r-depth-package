@@ -54,8 +54,9 @@ def generate_monocular_depth_maps(img_list, depth_prior_name='depthpro', save_de
         #   path_depthanything = image_path.replace('.png','_pred_depth_depthanything.npz').replace('.jpg','_pred_depth_depthanything.npz')
         #   image = Image.open(image_path)
         #   depth = pipe(image)["predicted_depth"].numpy()
-        # if save:
-        #     np.savez_compressed(path_depthanything, depth=depth)
+        #   depth_maps.append({'depth': depth})
+        #   if save_depth:
+        #       np.savez_compressed(path_depthanything, depth=depth)
     elif depth_prior_name == 'moge':
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model = MoGeModel.from_pretrained("Ruicheng/moge-vitl").to(device)                             
