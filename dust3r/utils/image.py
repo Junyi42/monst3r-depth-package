@@ -311,13 +311,8 @@ def load_images(folder_or_list, size, square_ok=False, verbose=True, dynamic_mas
 
     else:
         raise ValueError(f'Bad input {folder_or_list=} ({type(folder_or_list)})')
-<<<<<<< HEAD
 
     depth_maps = generate_monocular_depth_maps_without_saving(folder_or_list, depth_prior_name=depth_prior_name)
-=======
-    # TODO: if already have depth maps, skip this step
-    generate_monocular_depth_maps(folder_or_list, depth_prior_name=depth_prior_name)
->>>>>>> b4a06bed47dd766969d74fd2c5ceb7b858652a7e
 
     supported_images_extensions = ['.jpg', '.jpeg', '.png']
     supported_video_extensions = ['.mp4', '.avi', '.mov']
@@ -331,11 +326,7 @@ def load_images(folder_or_list, size, square_ok=False, verbose=True, dynamic_mas
     #start = 0
     folder_content = sorted(folder_content, key=lambda x: x.split('/')[-1])[start : start + interval]
     # print(start,interval,len(folder_content))
-<<<<<<< HEAD
     for path, pred_depth in zip(folder_content, depth_maps):
-=======
-    for i, path in enumerate(folder_content):
->>>>>>> b4a06bed47dd766969d74fd2c5ceb7b858652a7e
         full_path = os.path.join(root, path)
         if path.lower().endswith(supported_images_extensions):
             # Process image files
