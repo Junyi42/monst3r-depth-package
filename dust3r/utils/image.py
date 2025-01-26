@@ -326,7 +326,7 @@ def load_images(folder_or_list, size, square_ok=False, verbose=True, dynamic_mas
     #start = 0
     folder_content = sorted(folder_content, key=lambda x: x.split('/')[-1])[start : start + interval]
     # print(start,interval,len(folder_content))
-    for path, pred_depth in zip(folder_content, depth_maps):
+    for i, (path, pred_depth) in enumerate(zip(folder_content, depth_maps)):
         full_path = os.path.join(root, path)
         if path.lower().endswith(supported_images_extensions):
             # Process image files
