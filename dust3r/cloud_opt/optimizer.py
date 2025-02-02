@@ -345,6 +345,28 @@ class PointCloudOptimizer(BasePCOptimizer):
                 self.im_poses.requires_grad_(False)
         self.norm_pw_scale = False
 
+    def normalize_imposes_to_frame0(self):
+        """
+        Normalize the image poses so that frame 0's pose becomes the identity transformation.
+        This is done by left-multiplying every pose by the inverse of frame 0's homogeneous transform.
+        
+        The updated pose parameters are written back into self.im_poses.
+        """
+        # Retrieve homogeneous transformation matrices for each image pose.
+        # get_im_poses returns a tensor of shape [N, 4, 4]
+        cam2world = self.get_im_poses()  
+
+        # Compute the inverse of frame 0's transformation.
+        frame0_inv = torch.inverse(cam2world[0])
+        
+        # Update each pose by applying frame0_inv.
+        for i in range(cam2world.shape[0]):
+            # Compute the new homogeneous transformation:
+            new_pose = torch.matmul(frame0_inv, cam2world[i])
+            # Update self.im_poses with the new pose.
+            # _set_pose accepts a 4x4 matrix and converts it back into the internal parameter representation.
+            self._no_grad(self._set_pose(self.im_poses, i, new_pose))
+
     def preset_intrinsics(self, known_intrinsics, msk=None):
         if isinstance(known_intrinsics, torch.Tensor) and known_intrinsics.ndim == 2:
             known_intrinsics = [known_intrinsics]
