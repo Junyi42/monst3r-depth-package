@@ -17,7 +17,7 @@ import imageio
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-import depth_pro
+# import depth_pro
 from third_party.MoGe.moge.model import MoGeModel
 
 try:
@@ -35,6 +35,7 @@ def generate_monocular_depth_maps(img_list, depth_prior_name='depthpro', save_de
     depth_maps = []
 
     if depth_prior_name=='depthpro':
+        import depth_pro
         model, transform = depth_pro.create_model_and_transforms(device='cuda')
         model.eval()
         for image_path in tqdm(img_list):
@@ -351,7 +352,7 @@ def load_images(folder_or_list, size, square_ok=False, verbose=True, dynamic_mas
 
 
             #print(pred_depth)
-            if depth_prior_name == 'depthpro':
+            if depth_prior_name == 'depthpro' or depth_prior_name == 'moge':
               focal_length_px = pred_depth['focallength_px']
             else:
               focal_length_px = 200
