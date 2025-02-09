@@ -74,11 +74,12 @@ def generate_monocular_depth_maps(img_list, depth_prior_name='depthpro', save_de
             mask = output["mask"].cpu().numpy()
             intrinsics = output["intrinsics"].cpu().numpy() # (3, 3)
             focal_length_x, focal_length_y = intrinsics[0, 0], intrinsics[1, 1]
+            focallength_px = focal_length_x
 
-            depth_maps.append({'depth': depth, 'intrinsics': intrinsics, 'mask': mask})
+            depth_maps.append({'depth': depth, 'intrinsics': intrinsics, 'mask': mask, 'focallength_px': focallength_px})
 
             if save_depth:
-                np.savez_compressed(path_moge, depth=depth, intrinsics=intrinsics, mask=mask,)
+                np.savez_compressed(path_moge, depth=depth, intrinsics=intrinsics, mask=mask, focallength_px=focallength_px)
 
     return depth_maps
 
