@@ -8,8 +8,8 @@ setup(
     version='0.0',
     packages=find_packages(),
     install_requires=[
-        'torch==2.0.1',
-        'torchvision==0.15.2',
+        'torch>=2.0.1',
+        'torchvision>=0.15.2',
         'roma',
         'gradio',
         'matplotlib',
