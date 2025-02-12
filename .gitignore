@@ -141,3 +141,5 @@ dmypy.json
 
 # Model Weights
 *.pth
+
+!third_party/MoGe/moge/model/dinov2/models/

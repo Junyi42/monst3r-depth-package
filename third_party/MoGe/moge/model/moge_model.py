@@ -1,4 +1,5 @@
 from typing import *
+from typing import IO
 from numbers import Number
 from functools import partial
 from pathlib import Path

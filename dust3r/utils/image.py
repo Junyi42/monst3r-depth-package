@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 # import depth_pro
-from third_party.MoGe.moge.model import MoGeModel
+from monst3r_depth_package.third_party.MoGe.moge.model import MoGeModel
 
 try:
     from pillow_heif import register_heif_opener  # noqa
@@ -300,7 +300,7 @@ def normalize_pointcloud(point_cloud):
     normalized_point_cloud = (point_cloud - min_vals) / (max_vals - min_vals)
     return normalized_point_cloud
 
-def load_images(folder_or_list, size, square_ok=False, verbose=True, dynamic_mask_root=None, crop=True, fps=0, traj_format='custom', start=0, interval=300, depth_prior_name='depthpro'):
+def load_images(folder_or_list, size, square_ok=False, verbose=True, dynamic_mask_root=None, crop=True, fps=0, traj_format='custom', start=0, interval=300, depth_prior_name='moge'):
     """Open and convert all images or videos in a list or folder to proper input format for DUSt3R."""
     if isinstance(folder_or_list, str):
         if verbose:

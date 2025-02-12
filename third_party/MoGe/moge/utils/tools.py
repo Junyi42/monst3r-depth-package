@@ -224,17 +224,15 @@ def multithead_execute(inputs: List[Any], num_workers: int, pbar = None):
         pbar = tqdm(total=len(inputs) if hasattr(inputs, '__len__') else None)
 
     def decorator(fn: Callable):
-        with (
-            ThreadPoolExecutor(max_workers=num_workers) as executor,
-            pbar
-        ):  
-            pbar.refresh()
-            @catch_exception
-            def _fn(input):
-                ret = fn(input)
-                pbar.update()
-                return ret
-            executor.map(_fn, inputs)
-            executor.shutdown(wait=True)
+        with ThreadPoolExecutor(max_workers=num_workers) as executor:
+            with pbar:
+                pbar.refresh()
+                @catch_exception
+                def _fn(input):
+                    ret = fn(input)
+                    pbar.update()
+                    return ret
+                executor.map(_fn, inputs)
+                executor.shutdown(wait=True)
     
     return decorator
