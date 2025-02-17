@@ -231,6 +231,8 @@ def warp_by_disp(src_R, src_t, tgt_R, tgt_t, K, src_disp, coord, inv_K, debug_mo
             tgt_coord = flat_disp * torch.matmul(H_mat, coord) + \
                 torch.matmul(K, relative_t)
         else:
+            # Check device of variables
+            print(f"H_mat: {H_mat.device}, coord: {coord.device}, flat_disp: {flat_disp.device}, K: {K.device}, relative_t: {relative_t.device}")
             tgt_coord = torch.matmul(H_mat, coord) + flat_disp * \
                 torch.matmul(K, relative_t)
         tgt_coord = tgt_coord / (tgt_coord[:, -1:, :] + 1e-6)
