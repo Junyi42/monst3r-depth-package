@@ -138,3 +138,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Model Weights
+*.pth
+
+!third_party/MoGe/moge/model/dinov2/models/

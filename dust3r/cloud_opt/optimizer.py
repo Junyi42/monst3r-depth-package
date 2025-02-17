@@ -602,13 +602,16 @@ class PointCloudOptimizer(BasePCOptimizer):
             inv_K_all = torch.linalg.inv(K_all)
             K_1, inv_K_1 = K_all[self._ei], inv_K_all[self._ei]
             K_2, inv_K_2 = K_all[self._ej], inv_K_all[self._ej]
-            depth_all = torch.stack(self.get_depthmaps(raw=False)).unsqueeze(1)
+            depth_all = torch.stack(self.get_depthmaps(raw=False)).to(self.device).unsqueeze(1)
             depth1, depth2 = depth_all[self._ei], depth_all[self._ej]
             disp_1, disp_2 = 1 / (depth1 + 1e-6), 1 / (depth2 + 1e-6)
+            print(f"disp1: {disp_1.device}", f"disp2: {disp_2.device}")
             ego_flow_1_2, _ = self.depth_wrapper(R1, T1, R2, T2, disp_1, K_2, inv_K_1)
             ego_flow_2_1, _ = self.depth_wrapper(R2, T2, R1, T1, disp_2, K_1, inv_K_2)
             dynamic_masks_all = torch.stack(self.dynamic_masks).to(self.device).unsqueeze(1)
             dynamic_mask1, dynamic_mask2 = dynamic_masks_all[self._ei], dynamic_masks_all[self._ej]
+
+            print(f"ego_flow_1_2: {ego_flow_1_2.device}", f"ego_flow_2_1: {ego_flow_2_1.device}")
 
             flow_loss_i = self.flow_loss_fn(ego_flow_1_2[:, :2, ...], self.flow_ij, ~dynamic_mask1, per_pixel_thre=self.pxl_thre)
             flow_loss_j = self.flow_loss_fn(ego_flow_2_1[:, :2, ...], self.flow_ji, ~dynamic_mask2, per_pixel_thre=self.pxl_thre)
