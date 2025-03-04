@@ -381,7 +381,10 @@ def load_images(folder_or_list, size, square_ok=False, verbose=True, dynamic_mas
                 dynamic_mask_path = full_path.replace('final', 'dynamic_label_perfect').replace('clean', 'dynamic_label_perfect').replace('MPI-Sintel-training_images','MPI-Sintel-depth-training')
             #print(dynamic_mask_path)
             if os.path.exists(dynamic_mask_path):
-                if dynamic_mask_path.endswith('.npy'):
+                if dynamic_mask_path.endswith('.npz'):
+                    dynamic_mask = np.load(dynamic_mask_path)['mask']
+                    dynamic_mask = PIL.Image.fromarray(((dynamic_mask > 0) * 255).astype(np.uint8))
+                elif dynamic_mask_path.endswith('.npy'):
                     dynamic_mask = np.load(dynamic_mask_path)
                     dynamic_mask = PIL.Image.fromarray(((dynamic_mask > 0) * 255).astype(np.uint8))
                 else:
