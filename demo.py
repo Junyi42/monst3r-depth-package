@@ -35,7 +35,7 @@ if __name__ == '__main__':
     if args.weights is not None:
         weights_path = args.weights
     else:
-        weights_path = "naver/" + args.model_name
+        weights_path = "weights/" + args.model_name
     model = AsymmetricCroCo3DStereo.from_pretrained(weights_path).to(args.device)
 
     # dust3r will write the 3D model inside tmpdirname
