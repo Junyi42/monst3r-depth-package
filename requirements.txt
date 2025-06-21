@@ -11,3 +11,7 @@ trimesh
 tensorboard
 pyglet<2
 huggingface-hub[torch]>=0.22
+click
+pillow
+seaborn
+utils3d
